@@ -5,10 +5,19 @@ var passport = require('passport');
 var authenticate = require('../authenticate')
 var router = express.Router();
 
-/* GET users listing. */
-router.get('/', function (req, res, next) {
-    res.send('respond with a resource');
-});
+router.get('/', authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
+    User.find((err, users) => {
+        if (err){
+            res.statusCode = 500;
+            res.setHeader('Content-Type', 'application/json');
+            res.json({ err: err });
+        } else {
+            res.statusCode = 200;
+            res.setHeader('Content-Type', 'application/json');
+            res.json(users);
+        }
+    });
+})
 
 router.post('/signup', (req, res, next) => {
     User.register(new User({ username: req.body.username }), req.body.password, (err, user) => {
