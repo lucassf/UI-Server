@@ -60,6 +60,18 @@ favoritesRouter.route('/')
 
 favoritesRouter.route('/:dishId')
     .options(cors.corsWithOptions, (req, res) => { res.sendStatus(200); })
+    .get(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
+        Favorites.findOne({ user: req.user._id })
+            .then((favs) => {
+                res.statusCode = 200;
+                res.setHeader('Content-type', 'application/json');
+                if (!favs || favs.dishes.indexOf(req.params.dishId) < 0) {    
+                    return res.json({ "exists": false, "favorites": favs });
+                }
+                return res.json({ "exists": true, "favorites": favs });
+            }, (err) => next(err))
+            .catch((err) => next(err))
+    })
     .post(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
         Dishes.findById(req.params.dishId).populate('comments.author')
             .then((dish) => {
